@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vishvamitra - Advanced AI Sage</title>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f7f4e9;
+            font-family: 'EB Garamond', serif;
+            color: #4a2f21;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #fff8e1;
+            border: 2px solid #b08d57;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            z-index: 1;
+            position: relative;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            font-size: 36px;
+            margin: 0;
+            color: #3e2723;
+        }
+        .header p {
+            font-size: 18px;
+            color: #5d4037;
+        }
+        .chat-box {
+            height: 300px;
+            overflow-y: auto;
+            padding: 10px;
+            background-color: #fffde7;
+            border: 2px solid #b08d57;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .chat-message {
+            margin-bottom: 10px;
+        }
+        .user-message {
+            text-align: right;
+            color: #4a2f21;
+        }
+        .bot-message {
+            text-align: left;
+            color: #3e2723;
+        }
+        .input-box {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+        .input-box input {
+            flex-grow: 1;
+            padding: 10px;
+            font-size: 16px;
+            border: 2px solid #b08d57;
+            border-radius: 10px;
+            outline: none;
+        }
+        .input-box button {
+            background-color: #b08d57;
+            border: none;
+            color: #fff;
+            padding: 10px 20px;
+            margin-left: 10px;
+            font-size: 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .input-box button:hover {
+            background-color: #a37540;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #5d4037;
+        }
+        .footer p {
+            margin: 0;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #5d4037;
+            text-decoration: none;
+        }
+        /* Smoke and Flag Animation */
+        .smoke-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255,255,255,0) 50%, rgba(255,255,255,0.8) 90%);
+            pointer-events: none;
+            z-index: -1;
+        }
+        .flag-smoke {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            height: 200px;
+            background: url('https://upload.wikimedia.org/wikipedia/en/4/41/Flag_of_India.svg') no-repeat center;
+            background-size: cover;
+            opacity: 0.7;
+            animation: smoke 5s infinite;
+        }
+        @keyframes smoke {
+            0% { transform: translate(-50%, -50%) scale(1); opacity: 0.7; }
+            50% { transform: translate(-50%, -60%) scale(1.2); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 0.7; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="smoke-container">
+    <div class="flag-smoke"></div>
+</div>
+
+<div class="container">
+    <div class="header">
+        <h1>Vishvamitra</h1>
+        <p>The Sage of Ancient Wisdom</p>
+    </div>
+
+    <div id="chat-box" class="chat-box">
+        <div class="chat-message bot-message">Greetings, seeker. How may I assist you today?</div>
+    </div>
+
+    <div class="input-box">
+        <input type="text" id="user-input" placeholder="Ask for wisdom...">
+        <button id="send-button">Send</button>
+    </div>
+</div>
+
+<div class="footer">
+    <p>Powered by Vishvamitra's Wisdom &</p>
+    <a href="https://Balloonflame7.netlify.app/doc.html">Balloonflame7 🇮🇳</a>
+</div>
+
+<!-- Background Audio -->
+<audio id="background-audio" loop autoplay>
+    <source src="jay_shree_ram.mp3" type="audio/mpeg">
+    Your browser does not support the audio element.
+</audio>
+
+<!-- Voice Recognition -->
+<script>
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = false;
+    recognition.lang = 'en-IN'; // Set to desired language
+
+    recognition.onstart = () => console.log('Voice recognition started.');
+    recognition.onresult = async (event) => {
+        const lastResultIndex = event.results.length - 1;
+        const text = event.results[lastResultIndex][0].transcript.trim();
+        displayMessage('user', text);
+        handleUserInput(text);
+    };
+
+    recognition.onend = () => recognition.start();
+    recognition.start();
+
+    const chatBox = document.getElementById('chat-box');
+    const userInput = document.getElementById('user-input');
+    const sendButton = document.getElementById('send-button');
+
+    const openaiApiKey = 'sk-proj-dwcHaVSrvXQGJP7q8qCdT3BlbkFJYZNg42gzAj9Ol1ic1zAb';
+    const model = 'gpt-4o';
+
+    const messages = [
+        { role: 'system', content: `You are Vishvamitra, an advanced AI sage. You can perform future predictions, solve queries, generate images, and more. Created by Balloonflame7 🇮🇳 Whose owner is Jatin Sharma Jiiiii❤️.` },
+        
+        { role: 'assistant', content: 'Greetings, seeker. How may I assist you today?' }
+    ];
+
+    async function fetchAIResponse(conversation) {
+        try {
+            const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${openaiApiKey}`
+                },
+                body: JSON.stringify({
+                    model: model,
+                    messages: conversation
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`API request failed with status ${response.status}`);
+            }
+
+            const data = await response.json();
+            return data.choices[0].message.content;
+        } catch (error) {
+            console.error('Error fetching AI response:', error);
+            return 'Sorry, there was an error processing your request.';
+        }
+    }
+
+    async function handleUserInput(input) {
+        if (input.trim() === '') return;
+
+        displayMessage('user', input);
+
+        let responseText;
+
+        const updatedMessages = [...messages, { role: 'user', content: input }];
+        responseText = await fetchAIResponse(updatedMessages);
+        messages.push({ role: 'user', content: input });
+        messages.push({ role: 'assistant', content: responseText });
+
+        displayMessage('bot', responseText);
+    }
+
+    function displayMessage(role, content) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `chat-message ${role}-message`;
+        messageDiv.textContent = content;
+        chatBox.appendChild(messageDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    sendButton.addEventListener('click', () => {
+        const userInputValue = userInput.value.trim();
+        if (userInputValue) {
+            handleUserInput(userInputValue);
+            userInput.value = '';
+        }
+    });
+
+    userInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            sendButton.click();
+        }
+    });
+</script>
+</body>
+</html>
